@@ -1,0 +1,95 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+*.env
+*.venv
+
+# ---- IDE / Editor ----
+.vscode/
+.idea/
+*.code-workspace
+
+# ---- Logs / Outputs ----
+*.log
+logs/
+*.out
+*.err
+
+# ---- OS files ----
+.DS_Store
+Thumbs.db
+
+# ---- Python build / packaging ----
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+
+# ---- Jupyter / Notebooks ----
+.ipynb_checkpoints/
+
+# ---- Data / Models ----
+*.pt
+*.onnx
+*.weights
+*.ckpt
+*.h5
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.gif
+
+# ---- Ultralytics / YOLO ----
+runs/
+yolo_logs/
+C:\Users\*\AppData\Roaming\Ultralytics/
+
+# ---- Temporary files ----
+*.tmp
+*.swp
+*.bak
+*.old
+*.temp
+
+# ---- Docker ----
+*.pid
+*.tar
+*.lock
+.cache/
+.cache/*
+docker-compose.override.yml
+
+# ---- FastAPI / Uvicorn ----
+*.sqlite3
+*.db
+*.pid
+uvicorn.log
+
+# ---- Local test videos / results ----
+test_video.mp4
+output_videos/
+results/
+frames/
