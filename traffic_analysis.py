@@ -31,7 +31,7 @@ def segments_intersect(p1, p2, q1, q2):
 
 
 # MAIN TRACKING LOOP
-def run_traffic_analysis(source="test_video.mp4", display=True, metrics_dict=None):
+def run_traffic_analysis(source="test_video.mp4", display=True, metrics_dict=None, frame_callback=None):
     model = YOLO(MODEL_WEIGHTS)
     tracker = DeepSort(max_age=30)
     cap = cv2.VideoCapture(source)
