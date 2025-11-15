@@ -102,6 +102,9 @@ def run_traffic_analysis(source="test_video.mp4", display=True, metrics_dict=Non
             metrics_dict["counts"] = dict(counts)
             metrics_dict["fps"] = round(fps, 2)
 
+        if frame_callback is not None:
+            frame_callback(frame)
+
         if display:
             cv2.imshow("Traffic Flow", frame)
             if cv2.waitKey(1) & 0xFF == 27:

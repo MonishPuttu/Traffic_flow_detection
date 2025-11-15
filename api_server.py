@@ -1,32 +1,25 @@
+from contextlib import asynccontextmanager
 import threading
 from io import BytesIO
 import asyncio
 import json
 from fastapi import FastAPI, WebSocket
-from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, Response
 from traffic_analysis import run_traffic_analysis
 from prometheus_client import Gauge, generate_latest, REGISTRY
-from fastapi.responses import Response
 import cv2
 import time
-
-
-app = FastAPI(title="Traffic Flow Analysis API")
-
 
 # Prometheus metrics
 vehicle_count = Gauge("vehicle_count_total", "Total vehicle count", ["type"])
 fps_metric = Gauge("fps", "Frames per second")
 
-
 # shared metrics dict between threads
 metrics = {"counts": {}, "fps": 0.0}
-
 
 # Global variable to store latest processed frame
 latest_frame = None
 frame_lock = threading.Lock()
-
 
 def analysis_worker():
     """Run YOLO + DeepSORT in a background thread."""
@@ -35,15 +28,29 @@ def analysis_worker():
         source="test_video.mp4",
         display=False,
         metrics_dict=metrics,
-        frame_callback=update_frame  # Pass callback function
+        frame_callback=update_frame
     )
-
 
 def update_frame(frame):
     """Callback to update the latest frame from analysis."""
     global latest_frame
     with frame_lock:
         latest_frame = frame.copy()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Start the video analysis thread
+    thread = threading.Thread(target=analysis_worker, daemon=True)
+    thread.start()
+    print("✅ Analysis worker thread started")
+    
+    yield
+    
+    # Shutdown: Cleanup (optional)
+    print("🔴 Shutting down...")
+
+# Initialize FastAPI app with lifespan
+app = FastAPI(title="Traffic Flow Analysis API", lifespan=lifespan)
 
 
 @app.get("/")
@@ -73,18 +80,20 @@ def prometheus_metrics():
 async def video_feed():
     """Stream processed video frames as MJPEG."""
     def generate():
-        while True:
-            with frame_lock:
-                if latest_frame is not None:
-                    # Encode frame as JPEG
-                    ret, buffer = cv2.imencode('.jpg', latest_frame, 
-                                               [int(cv2.IMWRITE_JPEG_QUALITY), 85])
-                    if ret:
-                        frame_bytes = buffer.tobytes()
-                        yield (b'--frame\r\n'
-                               b'Content-Type: image/jpeg\r\n\r\n' + 
-                               frame_bytes + b'\r\n')
-            time.sleep(0.033)  # ~30 fps
+      while True:
+        with frame_lock:
+            if latest_frame is not None:
+                ret, buffer = cv2.imencode('.jpg', latest_frame, 
+                                          [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+                if ret:
+                    frame_bytes = buffer.tobytes()
+                    yield (b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + 
+                           frame_bytes + b'\r\n')
+            else:
+                # Send a blank frame or wait if no frame available yet
+                time.sleep(0.1)
+                time.sleep(0.033)  # ~30 fps
     
     return StreamingResponse(
         generate(),
@@ -188,15 +197,6 @@ async def websocket_endpoint(ws: WebSocket):
     while True:
         await ws.send_text(json.dumps(metrics))
         await asyncio.sleep(1)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Launch background AI analysis thread when FastAPI starts."""
-    print("🚀 Starting background YOLO worker...")
-    t = threading.Thread(target=analysis_worker, daemon=True)
-    t.start()
-
 
 if __name__ == "__main__":
     t = threading.Thread(target=analysis_worker, daemon=True)
