@@ -89,7 +89,7 @@ docker-compose.override.yml
 uvicorn.log
 
 # ---- Local test videos / results ----
-test_video.mp4
+test_video2.mp4
 output_videos/
 results/
 frames/
