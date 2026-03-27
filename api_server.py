@@ -177,11 +177,11 @@ async def viewer():
                     radial-gradient(circle at 100% 0%, #ebf1f8 0%, transparent 42%),
                     var(--bg);
                 color: var(--text-main);
-                padding: 28px 16px 36px;
+                padding: 18px 12px 18px;
             }
 
             .container {
-                max-width: 1280px;
+                width: min(96vw, 1560px);
                 margin: 0 auto;
             }
 
@@ -190,13 +190,13 @@ async def viewer():
                 justify-content: space-between;
                 align-items: center;
                 gap: 18px;
-                margin-bottom: 18px;
+                margin-bottom: 16px;
                 flex-wrap: wrap;
             }
 
             .title-wrap h1 {
                 margin: 0;
-                font-size: clamp(1.5rem, 2.1vw, 2.1rem);
+                font-size: clamp(1.8rem, 2.6vw, 2.75rem);
                 letter-spacing: -0.03em;
                 line-height: 1.15;
             }
@@ -204,7 +204,7 @@ async def viewer():
             .title-wrap p {
                 margin: 7px 0 0;
                 color: var(--text-muted);
-                font-size: 0.98rem;
+                font-size: 1.05rem;
             }
 
             .status-pill {
@@ -230,9 +230,9 @@ async def viewer():
 
             .layout {
                 display: grid;
-                gap: 18px;
-                grid-template-columns: 2fr 1fr;
-                align-items: start;
+                gap: 20px;
+                grid-template-columns: minmax(880px, 2.35fr) minmax(340px, 1fr);
+                align-items: stretch;
             }
 
             .panel {
@@ -241,10 +241,11 @@ async def viewer():
                 border-radius: var(--radius-lg);
                 box-shadow: var(--shadow);
                 overflow: hidden;
+                height: 100%;
             }
 
             .video-container {
-                padding: 14px;
+                padding: 16px;
             }
 
             .video-frame {
@@ -265,25 +266,32 @@ async def viewer():
                 justify-content: space-between;
                 align-items: center;
                 gap: 10px;
-                margin-top: 12px;
+                margin-top: 14px;
                 color: var(--text-muted);
-                font-size: 0.9rem;
+                font-size: 0.95rem;
                 flex-wrap: wrap;
             }
 
             .metrics-grid {
                 display: grid;
-                gap: 12px;
+                gap: 14px;
                 grid-template-columns: 1fr 1fr;
-                padding: 14px;
+                padding: 16px;
+                grid-auto-rows: minmax(112px, 1fr);
+                align-content: stretch;
+            }
+
+            .layout > aside.panel {
+                display: flex;
+                flex-direction: column;
             }
 
             .metric-card {
                 background: var(--surface-soft);
                 border: 1px solid var(--line);
                 border-radius: var(--radius-sm);
-                padding: 12px;
-                min-height: 98px;
+                padding: 14px;
+                min-height: 112px;
             }
 
             .metric-label {
@@ -296,7 +304,7 @@ async def viewer():
             }
 
             .metric-value {
-                font-size: 1.45rem;
+                font-size: 1.7rem;
                 font-weight: 800;
                 letter-spacing: -0.02em;
                 color: var(--text-main);
@@ -304,7 +312,7 @@ async def viewer():
             }
 
             .metric-value.small {
-                font-size: 1rem;
+                font-size: 1.08rem;
                 font-weight: 600;
                 line-height: 1.45;
                 color: #30425f;
@@ -321,7 +329,7 @@ async def viewer():
 
             .metrics-header h2 {
                 margin: 0;
-                font-size: 1rem;
+                font-size: 1.08rem;
                 letter-spacing: -0.01em;
             }
 
@@ -342,6 +350,10 @@ async def viewer():
             @media (max-width: 1080px) {
                 .layout {
                     grid-template-columns: 1fr;
+                }
+
+                .container {
+                    width: min(97vw, 1160px);
                 }
             }
 
