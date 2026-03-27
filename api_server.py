@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 import threading
+import os
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, HTMLResponse, Response
 from traffic_analysis import run_traffic_analysis
@@ -45,11 +46,34 @@ frame_lock = threading.Lock()
 def analysis_worker():
     """Run YOLO + DeepSORT in a background thread."""
     global latest_frame
+
+    source = os.getenv("VIDEO_SOURCE", "test_video2.mp4")
+    model_weights = os.getenv("MODEL_WEIGHTS", "yolov8s.pt")
+    conf_thresh = float(os.getenv("DETECTION_CONF", "0.30"))
+    iou_thresh = float(os.getenv("DETECTION_IOU", "0.50"))
+    img_size = int(os.getenv("DETECTION_IMGSZ", "640"))
+    min_box_area = int(os.getenv("MIN_BOX_AREA", "900"))
+    max_box_area_ratio = float(os.getenv("MAX_BOX_AREA_RATIO", "0.45"))
+    track_max_age = int(os.getenv("TRACK_MAX_AGE", "25"))
+    track_n_init = int(os.getenv("TRACK_N_INIT", "2"))
+    track_max_iou = float(os.getenv("TRACK_MAX_IOU_DISTANCE", "0.70"))
+    track_max_cosine = float(os.getenv("TRACK_MAX_COSINE_DISTANCE", "0.20"))
+
     run_traffic_analysis(
-        source="test_video2.mp4",
+        source=source,
         display=False,
         metrics_dict=metrics,
-        frame_callback=update_frame
+        frame_callback=update_frame,
+        model_weights=model_weights,
+        conf_thresh=conf_thresh,
+        iou_thresh=iou_thresh,
+        img_size=img_size,
+        min_box_area=min_box_area,
+        max_box_area_ratio=max_box_area_ratio,
+        track_max_age=track_max_age,
+        track_n_init=track_n_init,
+        track_max_iou_dist=track_max_iou,
+        track_max_cosine_dist=track_max_cosine,
     )
 
 def update_frame(frame):
@@ -63,12 +87,12 @@ async def lifespan(app: FastAPI):
     # Startup: Start the video analysis thread
     thread = threading.Thread(target=analysis_worker, daemon=True)
     thread.start()
-    print("✅ Analysis worker thread started")
+    print("Analysis worker thread started")
 
     yield
 
     # Shutdown: Cleanup
-    print("🔴 Shutting down...")
+    print("Shutting down...")
 
 # Initialize FastAPI app with lifespan
 app = FastAPI(title="Traffic Flow Analysis API", lifespan=lifespan)
@@ -84,8 +108,6 @@ def get_metrics():
 
 @app.get("/prometheus")
 def prometheus_metrics():
-    """Expose metrics in Prometheus format."""
-    # Update all Prometheus metrics
     for cls, val in metrics.get("counts", {}).items():
         vehicle_count.labels(type=cls).set(val)
 
@@ -94,17 +116,14 @@ def prometheus_metrics():
     tracking_time.set(metrics.get("tracking_time_ms", 0.0))
     active_tracks.set(metrics.get("active_tracks", 0))
 
-    # Update counters (only if they've increased)
     current_detections = metrics.get("total_detections", 0)
     current_id_switches = metrics.get("id_switches", 0)
     current_frame_count = metrics.get("frame_count", 0)
 
-    # Set counter values directly (Prometheus will track increases)
     total_detections._value._value = current_detections
     id_switches._value._value = current_id_switches
     frame_count._value._value = current_frame_count
 
-    # Update class-specific detections - FIXED: using 'class' instead of 'class_name'
     for cls, val in metrics.get("detections_by_class", {}).items():
         detections_by_class.labels(**{"class": cls}).set(val)
 
