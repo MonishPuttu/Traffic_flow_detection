@@ -14,6 +14,8 @@ IOU_THRESH = 0.50
 IMG_SIZE = 640
 MIN_BOX_AREA = 900
 MAX_BOX_AREA_RATIO = 0.45
+MIN_BOX_WIDTH = 24
+MIN_BOX_HEIGHT = 24
 COUNT_LINES = [
     [(165, 238), (397, 243)],
     [(519, 246), (738, 250)],
@@ -25,6 +27,7 @@ TRACK_N_INIT = 2
 TRACK_MAX_IOU_DIST = 0.70
 TRACK_MAX_COSINE_DIST = 0.20
 TRACK_NN_BUDGET = 120
+TRACK_MIN_STABLE_HITS = 3
 
 CLASS_CONF_THRESH = {
     "car": 0.32,
@@ -70,11 +73,14 @@ def run_traffic_analysis(
     img_size=IMG_SIZE,
     min_box_area=MIN_BOX_AREA,
     max_box_area_ratio=MAX_BOX_AREA_RATIO,
+    min_box_width=MIN_BOX_WIDTH,
+    min_box_height=MIN_BOX_HEIGHT,
     track_max_age=TRACK_MAX_AGE,
     track_n_init=TRACK_N_INIT,
     track_max_iou_dist=TRACK_MAX_IOU_DIST,
     track_max_cosine_dist=TRACK_MAX_COSINE_DIST,
     track_nn_budget=TRACK_NN_BUDGET,
+    track_min_stable_hits=TRACK_MIN_STABLE_HITS,
 ):
     model = YOLO(model_weights)
 
@@ -100,6 +106,7 @@ def run_traffic_analysis(
         raise RuntimeError(f"Cannot open video source: {source}")
 
     track_memory = {}
+    track_hits = defaultdict(int)
     counts = defaultdict(int)
     frame_id = 0
 
@@ -144,7 +151,12 @@ def run_traffic_analysis(
                 cls_name = model.names[cls_id]
                 conf = float(box.conf[0])
                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                box_w = max(0, x2 - x1)
+                box_h = max(0, y2 - y1)
                 box_area = max(0, x2 - x1) * max(0, y2 - y1)
+
+                if box_w < min_box_width or box_h < min_box_height:
+                    continue
 
                 if box_area < min_box_area:
                     continue
@@ -179,6 +191,13 @@ def run_traffic_analysis(
 
             tid = track.track_id
             current_track_ids.add(tid)
+
+            # Ignore predicted-only positions; they commonly cause transient ghost centroids.
+            time_since_update = int(getattr(track, "time_since_update", 0))
+            if time_since_update > 0:
+                track_hits[tid] = max(0, track_hits[tid] - 1)
+                continue
+
             ltrb = track.to_ltrb()
             x1, y1, x2, y2 = map(int, ltrb)
 
@@ -187,6 +206,11 @@ def run_traffic_analysis(
 
             c = centroid((x1, y1, x2, y2))
             cls_name = track.det_class if hasattr(track, "det_class") else "vehicle"
+
+            track_hits[tid] += 1
+            if track_hits[tid] < track_min_stable_hits:
+                track_memory[tid] = c
+                continue
 
             # Check line crossing for all counting lines
             if tid in track_memory:
@@ -322,10 +346,13 @@ if __name__ == "__main__":
     parser.add_argument("--imgsz", type=int, default=int(os.getenv("DETECTION_IMGSZ", IMG_SIZE)))
     parser.add_argument("--min-box-area", type=int, default=int(os.getenv("MIN_BOX_AREA", MIN_BOX_AREA)))
     parser.add_argument("--max-box-area-ratio", type=float, default=float(os.getenv("MAX_BOX_AREA_RATIO", MAX_BOX_AREA_RATIO)))
+    parser.add_argument("--min-box-width", type=int, default=int(os.getenv("MIN_BOX_WIDTH", MIN_BOX_WIDTH)))
+    parser.add_argument("--min-box-height", type=int, default=int(os.getenv("MIN_BOX_HEIGHT", MIN_BOX_HEIGHT)))
     parser.add_argument("--track-max-age", type=int, default=int(os.getenv("TRACK_MAX_AGE", TRACK_MAX_AGE)))
     parser.add_argument("--track-n-init", type=int, default=int(os.getenv("TRACK_N_INIT", TRACK_N_INIT)))
     parser.add_argument("--track-max-iou", type=float, default=float(os.getenv("TRACK_MAX_IOU_DISTANCE", TRACK_MAX_IOU_DIST)))
     parser.add_argument("--track-max-cosine", type=float, default=float(os.getenv("TRACK_MAX_COSINE_DISTANCE", TRACK_MAX_COSINE_DIST)))
+    parser.add_argument("--track-min-stable-hits", type=int, default=int(os.getenv("TRACK_MIN_STABLE_HITS", TRACK_MIN_STABLE_HITS)))
     args = parser.parse_args()
     run_traffic_analysis(
         source=args.source,
@@ -335,8 +362,11 @@ if __name__ == "__main__":
         img_size=args.imgsz,
         min_box_area=args.min_box_area,
         max_box_area_ratio=args.max_box_area_ratio,
+        min_box_width=args.min_box_width,
+        min_box_height=args.min_box_height,
         track_max_age=args.track_max_age,
         track_n_init=args.track_n_init,
         track_max_iou_dist=args.track_max_iou,
         track_max_cosine_dist=args.track_max_cosine,
+        track_min_stable_hits=args.track_min_stable_hits,
     )

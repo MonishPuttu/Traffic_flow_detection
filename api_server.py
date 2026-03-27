@@ -54,10 +54,13 @@ def analysis_worker():
     img_size = int(os.getenv("DETECTION_IMGSZ", "640"))
     min_box_area = int(os.getenv("MIN_BOX_AREA", "900"))
     max_box_area_ratio = float(os.getenv("MAX_BOX_AREA_RATIO", "0.45"))
+    min_box_width = int(os.getenv("MIN_BOX_WIDTH", "24"))
+    min_box_height = int(os.getenv("MIN_BOX_HEIGHT", "24"))
     track_max_age = int(os.getenv("TRACK_MAX_AGE", "25"))
     track_n_init = int(os.getenv("TRACK_N_INIT", "2"))
     track_max_iou = float(os.getenv("TRACK_MAX_IOU_DISTANCE", "0.70"))
     track_max_cosine = float(os.getenv("TRACK_MAX_COSINE_DISTANCE", "0.20"))
+    track_min_stable_hits = int(os.getenv("TRACK_MIN_STABLE_HITS", "3"))
 
     run_traffic_analysis(
         source=source,
@@ -70,10 +73,13 @@ def analysis_worker():
         img_size=img_size,
         min_box_area=min_box_area,
         max_box_area_ratio=max_box_area_ratio,
+        min_box_width=min_box_width,
+        min_box_height=min_box_height,
         track_max_age=track_max_age,
         track_n_init=track_n_init,
         track_max_iou_dist=track_max_iou,
         track_max_cosine_dist=track_max_cosine,
+        track_min_stable_hits=track_min_stable_hits,
     )
 
 def update_frame(frame):
