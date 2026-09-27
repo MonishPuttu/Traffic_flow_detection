@@ -23,3 +23,15 @@
 | 4 | 11.2–15.4 | **Telemetry** | Real dashboard screenshot + "31.3 FPS" callout |
 | 5 | 15.4–18.4 | **Observability** | `curl localhost:8000/prometheus` output |
 | 6 | 18.4–21.0 | **Outro** | "Traffic flow, measured." + GitHub link |
+
+## Voice-over version (43s)
+The final `brag.mp4` is the extended cut with narration. Voice: Kokoro TTS (`af_bella`), generated locally. Each scene's timeline was stretched to fit its line (entrances and transitions keep their original speed; only the hold in the middle of each scene slows down), the soundtrack was re-timed to match, and the music ducks under the voice. Some spellings below are written for the voice, e.g. "Ani-Talk", "R-x Check".
+
+| # | Time | Narration |
+|---|------|-----------|
+| 1 | 0.0–4.3s | Every vehicle on the road. Detected, tracked, and counted. |
+| 2 | 4.3–10.9s | This is Traffic Flow Monitoring: live roadway analysis, with low-latency telemetry. |
+| 3 | 10.9–23.0s | YOLO v8 detects cars, trucks, buses and motorcycles. Deep Sort gives each one a stable ID across frames. And when a track crosses a lane line, it's counted. |
+| 4 | 23.0–33.2s | A live dashboard streams the annotated video, with performance metrics. Here, thirty-one frames per second, with twelve millisecond inference. |
+| 5 | 33.2–38.7s | Every metric is exposed to Prometheus, so you can graph it, and alert on it. |
+| 6 | 38.7–43.4s | Traffic flow, measured. Find it on GitHub. |
