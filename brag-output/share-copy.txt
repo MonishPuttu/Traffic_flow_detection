@@ -1,0 +1,1 @@
+YOLOv8 finds every vehicle, DeepSORT keeps its ID, and crossing a lane line counts it — streamed live with FastAPI and scraped by Prometheus. 31 FPS, 12 ms inference, 0 ID switches. https://github.com/MonishPuttu/Traffic_flow_detection
