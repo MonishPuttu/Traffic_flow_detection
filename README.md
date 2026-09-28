@@ -1,5 +1,14 @@
 # Traffic_flow_detection
 
+<!-- brag:start -->
+<p align="center">
+  <a href="brag-output/brag.mp4"><img src="brag-output/brag.gif" alt="Traffic Flow Monitoring launch video" width="100%"></a>
+  <br>
+  <sub>▶ <a href="brag-output/brag.mp4"><b>Watch the full launch video with voice-over</b></a> (43s, sound on)</sub>
+</p>
+<!-- brag:end -->
+
+
 This project runs YOLOv8 + DeepSORT for multi-lane vehicle detection and counting.
 
 ## Accuracy Tuning
